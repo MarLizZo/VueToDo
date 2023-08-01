@@ -26,3 +26,10 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+# Other
+dist/
+firebase.json
+.firebaserc
+.firebase/
+firebase-tools-instant-win.exe
