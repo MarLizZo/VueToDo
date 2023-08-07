@@ -9,6 +9,10 @@ import { StorageHelper as sh } from '@/modules/StorageHelper';
 
 const isLoading = ref(true);
 const tasksArray: Ref<ITask[]> = ref([]);
+const formInputContent = ref('');
+const formInputUrgency = ref(false);
+const formInputEditFlag = ref(false);
+const formEditIndex = ref(0);
 
 function sortArray(arr: ITask[]): void {
     let urgentArr: ITask[] = arr.filter(t => t.urgent);
@@ -30,12 +34,19 @@ onBeforeUpdate(() => {
 });
 
 function addTask(task: ITask) {
-    if (task.urgent) {
-        tasksArray.value.unshift(task);
+    if (formInputEditFlag.value) {
+        tasksArray.value.splice(formEditIndex.value, 1, task);
     } else {
-        tasksArray.value.splice(tasksArray.value.findIndex(el => !el.urgent), 0, task);
+        if (task.urgent) {
+            tasksArray.value.unshift(task);
+        } else {
+            tasksArray.value.splice(tasksArray.value.findIndex(el => !el.urgent), 0, task);
+        }
     }
+
     sortArray(tasksArray.value);
+
+    formInputEditFlag.value = false;
 }
 
 function switchUrgency(task: ITask) {
@@ -50,6 +61,13 @@ function markCompleted(task: ITask) {
     sh.saveToStorage(tasksArray.value);
     sortArray(sh.getInProgressTasks());
 }
+
+function prepareForm(task: ITask, index: number) {
+    formInputContent.value = task.content;
+    formInputUrgency.value = task.urgent;
+    formInputEditFlag.value = true;
+    formEditIndex.value = index;
+}
 </script>
 
 <template>
@@ -58,12 +76,12 @@ function markCompleted(task: ITask) {
     </header>
     <main class="flex-grow-1">
         <div v-if="!isLoading" class="container-fluid my-4 d-flex flex-column">
-            <FormComp @submit="addTask" />
+            <FormComp @submit="addTask" :input_content="formInputContent" :input_urgency="formInputUrgency" />
             <div v-if="!tasksArray.length" class="d-flex flex-grow-1 justify-content-center align-items-center">
                 <h3 class="m-0">No Tasks found. It's time to get to work!</h3>
             </div>
             <div v-if="tasksArray.length" class="mt-5 mb-3 d-flex flex-column align-items-center">
-                <div v-for="task of tasksArray" class="single-task">
+                <div v-for="(task, index) of tasksArray" class="single-task">
                     <div
                         class="d-flex align-items-center justify-content-between px-3 py-2 my-3 border border-1 border-green rounded-5">
                         <div class="d-flex align-items-center">
@@ -72,7 +90,7 @@ function markCompleted(task: ITask) {
                         </div>
                         <div class="d-flex align-items-center">
                             <i class="bi bi-check-circle-fill mark-completed" @click="markCompleted(task)"></i>
-                            <i class="bi bi-pencil-square mx-2 edit-icon"></i>
+                            <i class="bi bi-pencil-square mx-2 edit-icon" @click="prepareForm(task, index)"></i>
                             <i class="bi bi-bookmark-fill mark-urgency" @click="switchUrgency(task)"></i>
                         </div>
                     </div>

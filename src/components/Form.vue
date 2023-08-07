@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { ref, type Ref } from 'vue';
+import { ref, watchEffect, type Ref } from 'vue';
 import { type ITask } from '@/interfaces/ITask';
 
+let inputs = defineProps(['input_content', 'input_urgency'])
+const normalizedCnt = ref();
+const normalizedUrg = ref();
+watchEffect(() => (normalizedCnt.value = inputs.input_content));
+watchEffect(() => (normalizedUrg.value = inputs.input_urgency));
 
 const formObj: Ref<Partial<ITask>> = ref({
-    urgent: false,
-    content: ''
+    content: normalizedCnt,
+    urgent: normalizedUrg
 });
 
 const emit = defineEmits(['submit']);
@@ -18,7 +23,8 @@ function emitData() {
             in_progress: true
         }
         emit('submit', newObj);
-        formObj.value.content = '';
+        normalizedCnt.value = '';
+        normalizedUrg.value = false;
     }
 }
 </script>
