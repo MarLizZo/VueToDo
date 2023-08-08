@@ -3,7 +3,7 @@ import HeaderComp from '../components/Header.vue';
 import FooterComp from '../components/Footer.vue';
 import FormComp from '../components/Form.vue';
 import LoaderComp from '../components/Loader.vue';
-import { onBeforeUpdate, onMounted, ref, type Ref } from 'vue';
+import { onMounted, ref, type Ref } from 'vue';
 import { type ITask } from '@/interfaces/ITask';
 import { StorageHelper as sh } from '@/modules/StorageHelper';
 
@@ -14,11 +14,12 @@ const formInputUrgency = ref(false);
 const formInputEditFlag = ref(false);
 const formEditIndex = ref(0);
 
-function sortArray(arr: ITask[]): void {
-    let urgentArr: ITask[] = arr.filter(t => t.urgent);
-    let notUrgentArr: ITask[] = arr.filter(t => !t.urgent);
+function sortArray(): void {
+    let urgentArr: ITask[] = tasksArray.value.filter(t => t.urgent);
+    let notUrgentArr: ITask[] = tasksArray.value.filter(t => !t.urgent);
     tasksArray.value.splice(0, tasksArray.value.length);
     tasksArray.value.push(...urgentArr, ...notUrgentArr);
+    updateStorage();
 }
 
 onMounted(() => {
@@ -26,14 +27,15 @@ onMounted(() => {
     setTimeout(() => {
         isLoading.value = false;
     }, 1500);
-    sortArray(sh.getInProgressTasks());
+    tasksArray.value = sh.readStorage();
+    sortArray();
 });
 
-onBeforeUpdate(() => {
-    if (tasksArray.value.length) sh.saveToStorage(tasksArray.value);
-});
+function updateStorage(): void {
+    sh.saveToStorage(tasksArray.value);
+}
 
-function addTask(task: ITask) {
+function addTask(task: ITask): void {
     if (formInputEditFlag.value) {
         tasksArray.value.splice(formEditIndex.value, 1, task);
     } else {
@@ -43,30 +45,33 @@ function addTask(task: ITask) {
             tasksArray.value.splice(tasksArray.value.findIndex(el => !el.urgent), 0, task);
         }
     }
-
-    sortArray(tasksArray.value);
-
+    sortArray();
     formInputEditFlag.value = false;
 }
 
-function switchUrgency(task: ITask) {
+function switchUrgency(task: ITask): void {
     let index = tasksArray.value.findIndex(t => t == task);
     tasksArray.value[index].urgent = !tasksArray.value[index].urgent;
-    sortArray(tasksArray.value);
+    sortArray();
 }
 
-function markCompleted(task: ITask) {
+function markCompleted(task: ITask): void {
     let index = tasksArray.value.findIndex(t => t == task);
     tasksArray.value[index].in_progress = false;
-    sh.saveToStorage(tasksArray.value);
-    sortArray(sh.getInProgressTasks());
+    sortArray();
 }
 
-function prepareForm(task: ITask, index: number) {
+function prepareForm(task: ITask, index: number): void {
     formInputContent.value = task.content;
     formInputUrgency.value = task.urgent;
     formInputEditFlag.value = true;
     formEditIndex.value = index;
+}
+
+function resetEdit() {
+    formInputContent.value = '';
+    formInputUrgency.value = false;
+    formInputEditFlag.value = false;
 }
 </script>
 
@@ -76,12 +81,13 @@ function prepareForm(task: ITask, index: number) {
     </header>
     <main class="flex-grow-1">
         <div v-if="!isLoading" class="container-fluid my-4 d-flex flex-column">
-            <FormComp @submit="addTask" :input_content="formInputContent" :input_urgency="formInputUrgency" />
+            <FormComp @submit="addTask" @no-edit="resetEdit" :input_content="formInputContent"
+                :input_urgency="formInputUrgency" :input_edit_flag="formInputEditFlag" />
             <div v-if="!tasksArray.length" class="d-flex flex-grow-1 justify-content-center align-items-center">
-                <h3 class="m-0">No Tasks found. It's time to get to work!</h3>
+                <h3 class="m-0 mt-4">No Tasks found. It's time to get to work!</h3>
             </div>
             <div v-if="tasksArray.length" class="mt-5 mb-3 d-flex flex-column align-items-center">
-                <div v-for="(task, index) of tasksArray" class="single-task">
+                <div v-for="(task, index) of tasksArray.filter(t => t.in_progress)" class="single-task">
                     <div
                         class="d-flex align-items-center justify-content-between px-3 py-2 my-3 border border-1 border-green rounded-5">
                         <div class="d-flex align-items-center">

@@ -2,18 +2,20 @@
 import { ref, watchEffect, type Ref } from 'vue';
 import { type ITask } from '@/interfaces/ITask';
 
-let inputs = defineProps(['input_content', 'input_urgency'])
+let inputs = defineProps(['input_content', 'input_urgency', 'input_edit_flag'])
 const normalizedCnt = ref();
 const normalizedUrg = ref();
+const normalizedBool = ref();
 watchEffect(() => (normalizedCnt.value = inputs.input_content));
 watchEffect(() => (normalizedUrg.value = inputs.input_urgency));
+watchEffect(() => (normalizedBool.value = inputs.input_edit_flag));
 
 const formObj: Ref<Partial<ITask>> = ref({
     content: normalizedCnt,
     urgent: normalizedUrg
 });
 
-const emit = defineEmits(['submit']);
+const emit = defineEmits(['submit', 'noEdit']);
 
 function emitData() {
     if (formObj.value.content) {
@@ -26,6 +28,10 @@ function emitData() {
         normalizedCnt.value = '';
         normalizedUrg.value = false;
     }
+}
+
+function cancelEdit() {
+    emit('noEdit');
 }
 </script>
 
@@ -50,8 +56,10 @@ function emitData() {
                 </ul>
             </div>
             <div class="d-flex justify-content-center">
-                <button type="submit" :disabled="formObj.content == ''"
-                    class="btn btn-outline-success mt-4 px-5 rounded-4">Save New Task</button>
+                <button id="c-btn" type="button" v-if="normalizedBool"
+                    class="btn btn-outline-danger mt-4 px-5 rounded-4 me-3" @click="cancelEdit()">Cancel Edit</button>
+                <button type="submit" :disabled="formObj.content == ''" class="btn btn-outline-success mt-4 px-5 rounded-4"
+                    v-text="normalizedBool ? 'Update Task' : 'Save New Task'"></button>
             </div>
 
         </form>
@@ -91,7 +99,7 @@ ul span:hover {
         border-right: 0 !important;
     }
 
-    .btn:not(button[type="submit"]) {
+    .btn:not(button[type="submit"]):not(#c-btn) {
         border-top-left-radius: 0 !important;
         border-bottom-left-radius: 0 !important;
         border-top-right-radius: var(--bs-border-radius-xl) !important;
