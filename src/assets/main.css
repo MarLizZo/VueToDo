@@ -15,6 +15,20 @@ body {
   background-color: #1A1A1A;
 }
 
+body::-webkit-scrollbar {
+  width: 8px;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: var(--green);
+  border-radius: 10px;
+}
+
+body::-webkit-scrollbar-track {
+  background: #303030;
+  border-radius: 10px;
+}
+
 p {
   cursor: default;
 }

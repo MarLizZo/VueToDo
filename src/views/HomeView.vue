@@ -83,7 +83,8 @@ function resetEdit() {
         <div v-if="!isLoading" class="container-fluid my-4 d-flex flex-column">
             <FormComp @submit="addTask" @no-edit="resetEdit" :input_content="formInputContent"
                 :input_urgency="formInputUrgency" :input_edit_flag="formInputEditFlag" />
-            <div v-if="!tasksArray.length" class="d-flex flex-grow-1 justify-content-center align-items-center">
+            <div v-if="!tasksArray.filter(t => t.in_progress).length"
+                class="d-flex flex-grow-1 justify-content-center align-items-center">
                 <h3 class="m-0 mt-4">No Tasks found. It's time to get to work!</h3>
             </div>
             <div v-if="tasksArray.length" class="mt-5 mb-3 d-flex flex-column align-items-center">

@@ -47,11 +47,12 @@ function restoreTask(task: ITask) {
         <HeaderComp />
     </header>
     <main class="flex-grow-1">
-        <div v-if="!isLoading" class="container-fluid my-4 d-flex flex-column">
-            <div v-if="!tasksArray.length" class="d-flex flex-grow-1 justify-content-center align-items-center">
-                <h3 class="m-0">No Tasks completed. It's time to get to work!</h3>
+        <div v-if="!isLoading" class="container-fluid my-5 d-flex flex-column">
+            <div v-if="!tasksArray.filter(t => !t.in_progress).length"
+                class="d-flex flex-grow-1 justify-content-center align-items-center">
+                <h3 class="m-0 mt-4">No Tasks completed. It's time to get to work!</h3>
             </div>
-            <div v-if="tasksArray.length" class="mt-5 mb-3 d-flex flex-column align-items-center">
+            <div v-if="tasksArray.length" class="d-flex flex-column align-items-center">
                 <div v-for="task of tasksArray.filter(t => !t.in_progress)" class="single-task">
                     <div
                         class="d-flex align-items-center justify-content-between px-3 py-2 my-3 border border-1 border-green rounded-5">
@@ -83,6 +84,10 @@ i:not(.urgent-badge) {
 
 i {
     font-size: 1.2em;
+}
+
+.urgent-badge {
+    color: var(--bs-danger);
 }
 
 .icon-delete {
